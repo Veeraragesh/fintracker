@@ -33,8 +33,8 @@ export default function SignIn({ onSwitchToSignUp }) {
   useEffect(() => {
     if (location.state?.message) {
       // alert(location.state.message);   // or toast
-      console.log("msg",location.state.message)
-      showSnackbar(location.state.message,"info");
+      console.log("msg", location.state.message)
+      showSnackbar(location.state.message, "info");
 
     }
   }, [location.state]);
@@ -61,25 +61,35 @@ export default function SignIn({ onSwitchToSignUp }) {
       try {
         const response = await API.post("/signin", payload);
         console.log("Backend response:", response.data);
+
         if (response.data.status === 1) {
-          showSnackbar("Login Successful!", "success")
+          showSnackbar("Login Successful!", "success");
+
           const token = response.data.token;
+          localStorage.setItem("token", token);
 
-          localStorage.setItem("token", token);   //need to store token in local storage
-
-          console.log("username..", response.data.user.username)
-          console.log("Token saved:", token);
           navigate("/managetransactions", {
             state: { name: response.data.user.username }
           });
 
         } else {
-          showSnackbar("Can't login Something Went Wrong", "error");
+          // this runs ONLY if backend sends status:1 but logical failure
+          showSnackbar(
+            response.data.detail || "Can't login. Something went wrong",
+            "error"
+          );
         }
 
       } catch (error) {
-        console.error("Error sending data:", error);
+        console.error("Login error:", error);
+
+        // 👇 THIS is where 400 / 401 errors come
+        const errorMessage =
+          error.response?.data?.detail || "Server error. Please try again.";
+
+        showSnackbar(errorMessage, "error");
       }
+
     }
     // alert("Signed in (simulated)");
 
